@@ -15,7 +15,7 @@ type application struct {
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
     if r.URL.Path != "/" {
-        http.NotFound(w, r)
+        app.notFound(w)
         return
     }
 
@@ -26,33 +26,28 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
     }
     ts, err := template.ParseFiles(files...)
     if err != nil {
-        app.errorLog.Println(err.Error())
-        http.Error(w, "Internal Server Error", 500)
+        app.serveError(w, err)
         return
     }
 
     err = ts.Execute(w, nil)
     if err != nil {
-        app.errorLog.Println(err.Error())
-        http.Error(w, "Internal Server Error", 500)
+        app.serveError(w, err)
     }
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
     id, err := strconv.Atoi(r.URL.Query().Get("id"))
     if err != nil || id < 1 {
-        app.errorLog.Println(err.Error())
-        http.NotFound(w, r)
+        app.notFound(w)
         return
     }
     fmt.Fprintf(w, "displaying item: %d", id)
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-    if r.Method != "POST" {
-        w.Header().Set("Allow", "POST")
-        http.Error(w, "Method Not Allowed", 405)
+    if r.Method != "POST" { w.Header().Set("Allow", "POST")
+        app.clientError(w, http.StatusMethodNotAllowed)
         return
     }
-    fmt.Fprint(w, "creating snippets here!")
 }
