@@ -8,6 +8,7 @@ import (
 
 func (app *application) serveError(w http.ResponseWriter, err error) {
     trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
+    // we do this to indicate the origin of the error instead of this file
     app.errorLog.Output(2, trace)
 
     http.Error(
