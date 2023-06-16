@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	// "html/template"
+	"html/template"
 	"net/http"
 	"strconv"
 
@@ -23,25 +23,26 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    for _, snippet := range s {
-        fmt.Fprintf(w, "%v\n", snippet)
+    // for _, snippet := range s {
+    //     fmt.Fprintf(w, "%v\n", snippet)
+    // }
+    data := &templateData{Snippets: s}
+
+    files := []string{
+        "./ui/html/home.page.tmpl",
+        "./ui/html/base.layout.tmpl",
+        "./ui/html/footer.partial.tmpl",
+    }
+    ts, err := template.ParseFiles(files...)
+    if err != nil {
+        app.serveError(w, err)
+        return
     }
 
-    // files := []string{
-    //     "./ui/html/home.page.tmpl",
-    //     "./ui/html/base.layout.tmpl",
-    //     "./ui/html/footer.partial.tmpl",
-    // }
-    // ts, err := template.ParseFiles(files...)
-    // if err != nil {
-    //     app.serveError(w, err)
-    //     return
-    // }
-    //
-    // err = ts.Execute(w, nil)
-    // if err != nil {
-    //     app.serveError(w, err)
-    // }
+    err = ts.Execute(w, data)
+    if err != nil {
+        app.serveError(w, err)
+    }
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +61,25 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    fmt.Fprintf(w, "%v", s)
+    files := []string{
+        "./ui/html/show.page.tmpl",
+        "./ui/html/base.layout.tmpl",
+        "./ui/html/footer.partial.tmpl",
+    }
+    ts, err := template.ParseFiles(files...)
+    if err != nil {
+        app.serveError(w, err)
+        return
+    }
+
+    // we wrap the snippet in a templateData struct to make it available in the template
+    // also it allows us to use more dynamic data
+    data := &templateData{Snippet: s}
+
+    err = ts.Execute(w, data)
+    if err != nil {
+        app.serveError(w, err)
+    }
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
