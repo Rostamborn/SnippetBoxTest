@@ -2,21 +2,15 @@ package main
 
 import (
 	"fmt"
-	// "html/template"
 	"net/http"
 	"strconv"
-
+    "github.com/go-chi/chi/v5"
 	"github.com/rostamborn/snippetbox/pkg/models"
 )
 
 
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-    if r.URL.Path != "/" {
-        app.notFound(w)
-        return
-    }
-
     s, err := app.snippets.Latest()
     if err != nil {
         app.serveError(w, err)
@@ -28,7 +22,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
-    id, err := strconv.Atoi(r.URL.Query().Get("id"))
+    // apparently there is like a global key value thing in Chi
+    // so that's why I can use the key here that I defined in routes.go
+    id, err := strconv.Atoi(chi.URLParam(r, "id"))
     if err != nil || id < 1 {
         app.notFound(w)
         return
@@ -49,13 +45,11 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
     app.render(w, r, "show.page.tmpl", data)
 }
 
-func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-    if r.Method != "POST" { 
-        w.Header().Set("Allow", "POST")
-        app.clientError(w, http.StatusMethodNotAllowed)
-        return
-    }
+func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprint(w, "we create a new snippet here")
+}
 
+func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
     title := "bookshelf"
     content := "my bookshelf holds valueable books that are dear to me\nalas I'm dumb"
     expires := "8"
@@ -65,6 +59,7 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
         app.serveError(w, err)
         return
     }
-    // we redirect to get feedback on our inser request
-    http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
+    // we redirect to get feedback on our insert request
+    // http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
+    http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 }

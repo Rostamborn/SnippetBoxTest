@@ -1,12 +1,19 @@
 package main
 
-import "net/http"
+import (
+    "net/http"
+    "github.com/go-chi/chi/v5"
+)
 
 func (app *application) routes() http.Handler {
-    mux := http.NewServeMux()
-    mux.HandleFunc("/", app.home)
-    mux.HandleFunc("/snippet", app.showSnippet)
-    mux.HandleFunc("/snippet/create", app.createSnippet)
+    mux := chi.NewRouter()
+    mux.Get("/", app.home)
+    mux.Get("/snippet/create", app.createSnippetForm)
+    mux.Post("/snippet/create", app.createSnippet)
+    // apparently there is like a global key value thing in Chi
+    // so that's why I can access id in handlers and get it's value
+    mux.Get("/snippet/{id}", app.showSnippet)
+
     fileServer := http.FileServer(http.Dir("./ui/static/"))
     mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
