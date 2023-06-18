@@ -7,6 +7,10 @@ import (
 
 func (app *application) routes() http.Handler {
     mux := chi.NewRouter()
+
+    // middleware stack
+    mux.Use(app.recoverPanic, app.logRequest, secureHeaders)
+
     mux.Get("/", app.home)
     mux.Get("/snippet/create", app.createSnippetForm)
     mux.Post("/snippet/create", app.createSnippet)
@@ -16,6 +20,5 @@ func (app *application) routes() http.Handler {
 
     fileServer := http.FileServer(http.Dir("./ui/static/"))
     mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-    return app.recoverPanic(app.logRequest(secureHeaders(mux)))
+    return mux
 }

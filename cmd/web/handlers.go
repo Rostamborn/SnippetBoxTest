@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-    "github.com/go-chi/chi/v5"
+	"strings"
+	"unicode/utf8"
+
+	"github.com/go-chi/chi/v5"
 	"github.com/rostamborn/snippetbox/pkg/models"
 )
 
@@ -46,20 +49,54 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprint(w, "we create a new snippet here")
+    app.render(w, r, "create.page.tmpl", nil)
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-    title := "bookshelf"
-    content := "my bookshelf holds valueable books that are dear to me\nalas I'm dumb"
-    expires := "8"
+    // we explicitly call this to handle the potential errors
+    // because we could've used r.PostFormValue that calles r.ParseForm automatically
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    title := r.PostForm.Get("title")
+    content := r.PostForm.Get("content")
+    expires := r.PostForm.Get("expires")
+
+    errors := make(map[string]string)
+
+    if strings.TrimSpace(title) == "" {
+        errors["title"] = "This field cannot be blank"
+    } else if utf8.RuneCountInString(title) > 100 {
+        errors["title"] = "This field is too long (maximum is 100 characters)"
+    }
+
+    if strings.TrimSpace(content) == "" {
+        errors["content"] = "This field cannot be blank"
+    }
+
+    if strings.TrimSpace(expires) == "" {
+        errors["expires"] = "This field cannot be blank"
+    } else if expires != "1" && expires != "7" && expires != "365" {
+        errors["expires"] = "This field is invalid"
+    }
+
+    if len(errors) > 0 {
+        app.render(w, r, "create.page.tmpl", &templateData{
+            FormErrors: errors,
+            FormData: r.PostForm,
+        })
+        return
+    }
 
     id, err := app.snippets.Insert(title, content, expires)
     if err != nil {
         app.serveError(w, err)
         return
     }
+
     // we redirect to get feedback on our insert request
-    // http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
     http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 }
