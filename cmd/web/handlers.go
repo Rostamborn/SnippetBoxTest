@@ -61,36 +61,6 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
         app.clientError(w, http.StatusBadRequest)
         return
     }
-    //
-    // title := r.PostForm.Get("title")
-    // content := r.PostForm.Get("content")
-    // expires := r.PostForm.Get("expires")
-    //
-    // errors := make(map[string]string)
-    //
-    // if strings.TrimSpace(title) == "" {
-    //     errors["title"] = "This field cannot be blank"
-    // } else if utf8.RuneCountInString(title) > 100 {
-    //     errors["title"] = "This field is too long (maximum is 100 characters)"
-    // }
-    //
-    // if strings.TrimSpace(content) == "" {
-    //     errors["content"] = "This field cannot be blank"
-    // }
-    //
-    // if strings.TrimSpace(expires) == "" {
-    //     errors["expires"] = "This field cannot be blank"
-    // } else if expires != "1" && expires != "7" && expires != "365" {
-    //     errors["expires"] = "This field is invalid"
-    // }
-    //
-    // if len(errors) > 0 {
-    //     app.render(w, r, "create.page.tmpl", &templateData{
-    //         FormErrors: errors,
-    //         FormData: r.PostForm,
-    //     })
-    //     return
-    // }
     form := forms.New(r.PostForm)
     form.Required("title", "content", "expires")
     form.MaxLength("title", 100)
@@ -100,10 +70,14 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
         app.render(w, r, "create.page.tmpl", &templateData{Form: form})
     }
 
-    id, err := app.snippets.Insert(form.Get("title"), form.Get("content"), form.Get("expires"))
-    if err != nil {
-        app.serveError(w, err)
-        return
+    id := 0
+    if form.Valid() { // we only insert into DB if the form is valid
+        id, err = app.snippets.Insert(form.Get("title"), form.Get("content"), form.Get("expires"))
+        if err != nil {
+            app.serveError(w, err)
+            return
+        }
+        app.session.Put(r, "flash", "Snippet successfully inserted!")
     }
 
     // we redirect to get feedback on our insert request

@@ -3,13 +3,15 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log"
-    "html/template"
+    "time"
 	"net/http"
 	"os"
 
-	"github.com/rostamborn/snippetbox/pkg/models/mysql"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golangcollege/sessions"
+	"github.com/rostamborn/snippetbox/pkg/models/mysql"
 )
 
 type application struct {
@@ -17,6 +19,7 @@ type application struct {
     infoLog *log.Logger
     snippets *mysql.SnippetModel
     templateCache map[string]*template.Template
+    session *sessions.Session
 }
 
 func openDB(dsn string) (*sql.DB, error) {
@@ -33,6 +36,7 @@ func openDB(dsn string) (*sql.DB, error) {
 func main() {
     dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data source name")
     addr := flag.String("addr", ":8000", "HTTP network address")
+    secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key for encryption")
     mess := flag.String("message", "maaaaate", "show message")
     flag.Parse()
 
@@ -50,11 +54,15 @@ func main() {
         errLogger.Fatal(err)
     }
 
+    session := sessions.New([]byte(*secret))
+    session.Lifetime = 6 * time.Hour
+
     app := &application{
         errorLog: errLogger,
         infoLog: infoLogger,
         snippets: &mysql.SnippetModel{DB: db},
         templateCache: templateChache,
+        session: session,
     }
     mux := app.routes()    
 
