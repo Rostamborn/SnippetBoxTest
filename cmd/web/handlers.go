@@ -83,3 +83,25 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
     // we redirect to get feedback on our insert request
     http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 }
+
+func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
+    app.render(w, r, "signup.page.tmpl", &templateData{
+        Form: forms.New(nil),
+    })
+}
+
+func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprint(w, "the user signs up here")
+}
+
+func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprint(w, "the user gets login form here")
+}
+
+func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprint(w, "the user logs in here")
+}
+
+func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprint(w, "the user logs out here")
+}

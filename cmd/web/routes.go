@@ -23,10 +23,14 @@ func (app *application) routes() http.Handler {
         // apparently there is like a global key value thing in Chi
         // so that's why I can access id in handlers and get it's value
         r.Get("/snippet/{id}", app.showSnippet)
+
+        r.Get("/user/signup", app.signupUserForm)
+        r.Post("/user/signup", app.signupUser)
+        r.Get("/user/login", app.loginUserForm)
+        r.Post("/user/login", app.loginUser)
+        r.Post("/user/logout", app.logoutUser)
     })
-
-
-
+        
     fileServer := http.FileServer(http.Dir("./ui/static/"))
     mux.Handle("/static/", http.StripPrefix("/static", fileServer))
     return mux
