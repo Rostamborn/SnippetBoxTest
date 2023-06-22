@@ -6,6 +6,7 @@ import (
     "bytes"
 	"net/http"
 	"runtime/debug"
+    "github.com/rostamborn/snippetbox/pkg/models"
 )
 
 func (app *application) addDefaultData(td *templateData, r *http.Request) *templateData {
@@ -37,8 +38,12 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
     buf.WriteTo(w)
 }
 
-func (app *application) authenticatedUser(r *http.Request) int {
-    return app.session.GetInt(r, "userID")
+func (app *application) authenticatedUser(r *http.Request) *models.User {
+    user, ok := r.Context().Value(contextKeyUser).(*models.User)
+    if !ok {
+        return nil
+    }
+    return user
 }
 
 func (app *application) serveError(w http.ResponseWriter, err error) {

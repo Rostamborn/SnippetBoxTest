@@ -17,6 +17,7 @@ func (app *application) routes() http.Handler {
         r.Use(app.logRequest)
         r.Use(secureHeaders)
         r.Use(app.session.Enable)
+        r.Use(app.authenticate)
         r.Get("/", app.home)
         
         // apparently there is like a global key value thing in Chi
@@ -35,6 +36,7 @@ func (app *application) routes() http.Handler {
         r.Use(secureHeaders)
         r.Use(app.session.Enable)
         r.Use(app.requireAuthenticatedUser)
+        r.Use(app.authenticate)
         r.Get("/snippet/create", app.createSnippetForm)
         r.Post("/snippet/create", app.createSnippet)
     })

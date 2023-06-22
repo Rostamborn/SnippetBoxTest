@@ -14,7 +14,7 @@ type templateData struct {
     CurrentYear int
     Form *forms.Form
     Flash string
-    AuthenticatedUser int
+    AuthenticatedUser *models.User
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {
